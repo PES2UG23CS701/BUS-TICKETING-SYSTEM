@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment - Bus Booking</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            max-width: 500px;
+            width: 100%;
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 24px;
+        }
+        .amount-section {
+            background: #f0f0f0;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .amount-label {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        .amount {
+            font-size: 36px;
+            color: #667eea;
+            font-weight: bold;
+        }
+        .payment-methods {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .method-btn {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            font-weight: bold;
+            color: #333;
+        }
+        .method-btn:hover {
+            border-color: #667eea;
+            background: #f9f9f9;
+        }
+        .method-btn.active {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+        .payment-form {
+            display: none;
+        }
+        .payment-form.active {
+            display: block;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .error {
+            color: red;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        .pay-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .pay-btn:hover {
+            transform: translateY(-2px);
+        }
+        .pay-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .secure-badge {
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>💳 Complete Payment</h2>
+    
+    <div class="amount-section">
+        <div class="amount-label">Amount to Pay</div>
+        <div class="amount" id="paymentAmount">₹0</div>
+    </div>
+
+    <div class="payment-methods">
+        <button class="method-btn active" onclick="selectMethod('CARD')">💳 Card</button>
+        <button class="method-btn" onclick="selectMethod('UPI')">📱 UPI</button>
+    </div>
+
+    <!-- Card Payment Form -->
+    <form class="payment-form active" id="cardForm">
+        <div class="form-group">
+            <label for="cardName">Cardholder Name</label>
+            <input type="text" id="cardName" placeholder="Enter cardholder name" required>
+        </div>
+        <div class="form-group">
+            <label for="cardNumber">Card Number</label>
+            <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19" required>
+            <div class="error" id="cardError"></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="expiry">Expiry (MM/YY)</label>
+                <input type="text" id="expiry" placeholder="MM/YY" maxlength="5" required>
+            </div>
+            <div class="form-group">
+                <label for="cvv">CVV</label>
+                <input type="text" id="cvv" placeholder="123" maxlength="3" required>
+            </div>
+        </div>
+        <button type="button" class="pay-btn" onclick="processCardPayment()">Pay with Card</button>
+    </form>
+
+    <!-- UPI Payment Form -->
+    <form class="payment-form" id="upiForm">
+        <div class="form-group">
+            <label for="upiId">UPI ID</label>
+            <input type="text" id="upiId" placeholder="username@bankname" required>
+            <div class="error" id="upiError"></div>
+        </div>
+        <button type="button" class="pay-btn" onclick="processUPIPayment()">Pay with UPI</button>
+    </form>
+
+    <div class="secure-badge">
+        🔒 Your payment is secure and encrypted
+    </div>
+</div>
+
+<script>
+    let selectedMethod = "CARD";
+    let bookingId = null;
+    let bookingPrice = 0;
+
+    window.onload = function() {
+        loadPaymentDetails();
+    };
+
+    function loadPaymentDetails() {
+        bookingId = localStorage.getItem("bookingId");
+        bookingPrice = parseFloat(localStorage.getItem("bookingPrice")) || 0;
+        
+        if (!bookingId) {
+            alert("No booking found. Please book a bus first.");
+            window.location.href = "/search";
+            return;
+        }
+
+        document.getElementById("paymentAmount").innerText = "₹" + bookingPrice;
+    }
+
+    function selectMethod(method) {
+        selectedMethod = method;
+        
+        // Update UI
+        document.querySelectorAll(".method-btn").forEach(btn => btn.classList.remove("active"));
+        event.target.classList.add("active");
+        
+        // Toggle forms
+        document.getElementById("cardForm").classList.remove("active");
+        document.getElementById("upiForm").classList.remove("active");
+        
+        if (method === "CARD") {
+            document.getElementById("cardForm").classList.add("active");
+        } else {
+            document.getElementById("upiForm").classList.add("active");
+        }
+    }
+
+    function processCardPayment() {
+        let cardName = document.getElementById("cardName").value.trim();
+        let cardNumber = document.getElementById("cardNumber").value.trim().replace(/\s/g, "");
+        let expiry = document.getElementById("expiry").value.trim();
+        let cvv = document.getElementById("cvv").value.trim();
+
+        document.getElementById("cardError").innerText = "";
+
+        // Validation
+        if (!cardName || !cardNumber || !expiry || !cvv) {
+            document.getElementById("cardError").innerText = "All fields are required";
+            return;
+        }
+        if (cardNumber.length !== 16) {
+            document.getElementById("cardError").innerText = "Card number must be 16 digits";
+            return;
+        }
+        if (!expiry.match(/^\d{2}\/\d{2}$/)) {
+            document.getElementById("cardError").innerText = "Invalid expiry format (MM/YY)";
+            return;
+        }
+        if (cvv.length !== 3) {
+            document.getElementById("cardError").innerText = "CVV must be 3 digits";
+            return;
+        }
+
+        processPayment("CARD");
+    }
+
+    function processUPIPayment() {
+        let upiId = document.getElementById("upiId").value.trim();
+        document.getElementById("upiError").innerText = "";
+
+        if (!upiId) {
+            document.getElementById("upiError").innerText = "UPI ID is required";
+            return;
+        }
+        if (!upiId.match(/^[a-zA-Z0-9._-]+@[a-zA-Z]{3,}$/)) {
+            document.getElementById("upiError").innerText = "Invalid UPI ID format";
+            return;
+        }
+
+        processPayment("UPI");
+    }
+
+    function processPayment(method) {
+        let paymentData = {
+            bookingId: bookingId,
+            amount: bookingPrice,
+            method: method,
+            status: "PENDING"
+        };
+
+        // Disable button during processing
+        let btn = event.target;
+        btn.disabled = true;
+        btn.innerText = "Processing...";
+
+        fetch("http://localhost:8081/payment/pay", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(paymentData)
+        })
+            .then(res => res.json())
+            .then(data => {
+                // Update booking status to CONFIRMED and link payment
+                return fetch(`http://localhost:8081/booking/${bookingId}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ 
+                        id: bookingId,
+                        status: "CONFIRMED",
+                        paymentId: data.paymentId || data.payment?.id || bookingId
+                    })
+                }).then(res => res.json()).then(() => data);
+            })
+            .then(data => {
+                localStorage.setItem("paymentId", data.paymentId || data.payment?.id || bookingId);
+                showSuccessMessage();
+                setTimeout(() => {
+                    window.location.href = "/dashboard";
+                }, 2000);
+            })
+            .catch(err => {
+                btn.disabled = false;
+                btn.innerText = "Try Again";
+                alert("Payment Error: " + err.message);
+            });
+    }
+
+    function showSuccessMessage() {
+        let container = document.querySelector(".container");
+        container.innerHTML = `
+            <div style="text-align: center;">
+                <div style="font-size: 60px; margin-bottom: 20px;">✅</div>
+                <h2>Payment Successful!</h2>
+                <p style="color: #666; margin-top: 20px;">Your booking has been confirmed. You will be redirected shortly.</p>
+            </div>
+        `;
+    }
+
+    // Format card number with spaces
+    document.addEventListener("DOMContentLoaded", function() {
+        let cardInput = document.getElementById("cardNumber");
+        if (cardInput) {
+            cardInput.addEventListener("input", function() {
+                this.value = this.value.replace(/\D/g, "").replace(/(\d{4})/g, "$1 ").trim();
+            });
+        }
+    });
+</script>
+</body>
+</html>
