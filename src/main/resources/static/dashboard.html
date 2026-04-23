@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Bus Booking</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f5f7fa;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            font-size: 28px;
+        }
+        .user-info {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        .logout-btn:hover {
+            background: white;
+            color: #667eea;
+        }
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        .tab-btn {
+            background: white;
+            border: 2px solid #ddd;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        .tab-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .bookings-grid {
+            display: grid;
+            gap: 20px;
+        }
+        .booking-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid #667eea;
+        }
+        .booking-card h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        .booking-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        .detail {
+            background: #f5f7fa;
+            padding: 12px;
+            border-radius: 5px;
+        }
+        .detail-label {
+            color: #666;
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        .detail-value {
+            color: #333;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        .status {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status.confirmed {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.cancelled {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .action-btn {
+            padding: 8px 16px;
+            margin-top: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        .action-btn.cancel {
+            background: #dc3545;
+        }
+        .action-btn.cancel:hover {
+            background: #c82333;
+        }
+        .empty-message {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            text-align: center;
+            color: #666;
+        }
+        .new-booking-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        .new-booking-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <div>
+            <h1>Welcome, <span id="userName">User</span>!</h1>
+            <p>Your Bus Booking Dashboard</p>
+        </div>
+        <div class="user-info">
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('bookings')">My Bookings</button>
+        <button class="tab-btn" onclick="switchTab('search')">Book New Ticket</button>
+    </div>
+
+    <div id="bookings" class="tab-content active">
+        <div id="bookingsContainer" class="bookings-grid"></div>
+    </div>
+
+    <div id="search" class="tab-content">
+        <div style="background: white; padding: 30px; border-radius: 10px;">
+            <h2>Search Buses</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 20px;">
+                <div>
+                    <label>From:</label>
+                    <input type="text" id="source" placeholder="Source" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 5px;">
+                </div>
+                <div>
+                    <label>To:</label>
+                    <input type="text" id="destination" placeholder="Destination" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 5px;">
+                </div>
+                <div style="display: flex; align-items: flex-end;">
+                    <button class="new-booking-btn" onclick="searchBuses()" style="width: 100%;">Search Buses</button>
+                </div>
+            </div>
+            <div id="searchResults" style="margin-top: 30px;"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let userId = localStorage.getItem('userId');
+    let userName = localStorage.getItem('userName');
+
+    if (!userId) {
+        window.location.href = '/login';
+    }
+
+    document.getElementById('userName').innerText = userName || 'User';
+
+    function switchTab(tabName) {
+        // Hide all tabs
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        
+        // Show active tab
+        document.getElementById(tabName).classList.add('active');
+        event.target.classList.add('active');
+
+        if (tabName === 'bookings') {
+            loadBookings();
+        }
+    }
+
+    function loadBookings() {
+        fetch(`http://localhost:8081/booking/user/${userId}`)
+            .then(res => res.json())
+            .then(bookings => {
+                const container = document.getElementById('bookingsContainer');
+                
+                if (!bookings || bookings.length === 0) {
+                    container.innerHTML = '<div class="empty-message"><h3>No Bookings Yet</h3><p>Book your first bus ticket now!</p></div>';
+                    return;
+                }
+
+                container.innerHTML = bookings.map(booking => `
+                    <div class="booking-card">
+                        <h3>Booking #${booking.id}</h3>
+                        <div class="booking-details">
+                            <div class="detail">
+                                <div class="detail-label">Seat Number</div>
+                                <div class="detail-value">${booking.seatNumber}</div>
+                            </div>
+                            <div class="detail">
+                                <div class="detail-label">Travel Date</div>
+                                <div class="detail-value">${new Date(booking.travelDate).toLocaleDateString()}</div>
+                            </div>
+                            <div class="detail">
+                                <div class="detail-label">Price</div>
+                                <div class="detail-value">₹${booking.price}</div>
+                            </div>
+                            <div class="detail">
+                                <div class="detail-label">Status</div>
+                                <div><span class="status ${booking.status.toLowerCase()}">${booking.status}</span></div>
+                            </div>
+                            <div class="detail">
+                                <div class="detail-label">Payment ID</div>
+                                <div class="detail-value">#${booking.paymentId || 'N/A'}</div>
+                            </div>
+                            <div class="detail" id="payment-info-${booking.id}">
+                                <div class="detail-label">Payment Status</div>
+                                <div class="detail-value" id="payment-status-${booking.id}">Loading...</div>
+                            </div>
+                        </div>
+                        ${booking.status === 'CONFIRMED' ? `
+                            <button class="action-btn cancel" onclick="cancelBooking(${booking.id})">Cancel Booking</button>
+                        ` : ''}
+                    </div>
+                `).join('');
+                // Load payment details for each booking
+                bookings.forEach(booking => {
+                    if (booking.paymentId > 0) {
+                        loadPaymentStatus(booking.id, booking.paymentId);
+                    }
+                });
+            })
+            .catch(err => {
+                document.getElementById('bookingsContainer').innerHTML = '<div class="empty-message"><h3>Error Loading Bookings</h3><p>Try again later</p></div>';
+            });
+    }
+
+    function loadPaymentStatus(bookingId, paymentId) {
+        fetch(`http://localhost:8081/payment/${paymentId}`)
+            .then(r => r.json())
+            .then(payment => {
+                const elem = document.getElementById(`payment-status-${bookingId}`);
+                if (elem) {
+                    elem.innerHTML = `<span class="status ${payment.status.toLowerCase()}">${payment.status}</span><br><small>₹${payment.amount}</small>`;
+                }
+            })
+            .catch(() => {
+                const elem = document.getElementById(`payment-status-${bookingId}`);
+                if (elem) {
+                    elem.innerHTML = 'Unknown';
+                }
+            });
+    }
+
+    function searchBuses() {
+        const source = document.getElementById('source').value;
+        const destination = document.getElementById('destination').value;
+
+        if (!source || !destination) {
+            alert('Please enter both source and destination');
+            return;
+        }
+
+        fetch(`http://localhost:8081/bus/search?source=${source}&destination=${destination}`)
+            .then(res => res.json())
+            .then(buses => {
+                const resultsDiv = document.getElementById('searchResults');
+                
+                if (!buses || buses.length === 0) {
+                    resultsDiv.innerHTML = '<div class="empty-message"><h3>No Buses Found</h3></div>';
+                    return;
+                }
+
+                resultsDiv.innerHTML = '<h3 style="margin-bottom: 20px;">Available Buses</h3>' + 
+                    buses.map(bus => `
+                        <div class="booking-card">
+                            <h3>${bus.busName} (${bus.source} → ${bus.destination})</h3>
+                            <div class="booking-details">
+                                <div class="detail">
+                                    <div class="detail-label">Departure</div>
+                                    <div class="detail-value">${bus.departureTime}</div>
+                                </div>
+                                <div class="detail">
+                                    <div class="detail-label">Fare</div>
+                                    <div class="detail-value">₹${bus.price}</div>
+                                </div>
+                                <div class="detail">
+                                    <div class="detail-label">Available Seats</div>
+                                    <div class="detail-value">${bus.availableSeats}/${bus.totalSeats}</div>
+                                </div>
+                            </div>
+                            ${bus.availableSeats > 0 ? `
+                                <div style="display: flex; gap: 10px; align-items: flex-end;">
+                                    <div style="flex: 1;">
+                                        <label style="display: block; font-size: 12px; margin-bottom: 5px;">Select Seat:</label>
+                                        <input type="number" id="seat_${bus.id}" min="1" max="${bus.totalSeats}" value="1" style="width: 100%; padding: 8px; border: 2px solid #ddd; border-radius: 5px;">
+                                    </div>
+                                    <button class="action-btn" onclick="bookBus(${bus.id}, ${bus.price})" style="flex: 1;">Book Now</button>
+                                </div>
+                            ` : '<button class="action-btn" style="background: #ccc; cursor: not-allowed;">No Seats Available</button>'}
+                        </div>
+                    `).join('');
+            })
+            .catch(err => alert('Error searching buses'));
+    }
+
+    function bookBus(busId, price) {
+        const seatInput = document.getElementById('seat_' + busId);
+        if (!seatInput) {
+            alert('Seat input not found');
+            return;
+        }
+        
+        const seatNumber = parseInt(seatInput.value);
+        if (!seatNumber || seatNumber < 1 || seatNumber > 40) {
+            alert('Please enter a valid seat number (1-40)');
+            return;
+        }
+
+        const bookingData = {
+            userId: parseInt(userId),
+            busId: busId,
+            seatNumber: seatNumber,
+            status: 'PENDING',
+            travelDate: new Date(),
+            price: price
+        };
+
+        fetch('http://localhost:8081/booking/book', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(bookingData)
+        })
+            .then(res => res.json())
+            .then(booking => {
+                localStorage.setItem('bookingId', booking.id);
+                localStorage.setItem('bookingPrice', booking.price);
+                window.location.href = '/payment';
+            })
+            .catch(err => alert('Error booking bus'));
+    }
+
+    function cancelBooking(bookingId) {
+        if (confirm('Are you sure you want to cancel this booking?')) {
+            fetch(`http://localhost:8081/booking/cancel/${bookingId}`, { method: 'PUT' })
+                .then(res => res.json())
+                .then(() => {
+                    alert('Booking cancelled successfully');
+                    loadBookings();
+                })
+                .catch(err => alert('Error cancelling booking'));
+        }
+    }
+
+    function logout() {
+        localStorage.clear();
+        window.location.href = '/login';
+    }
+
+    // Load bookings on page load
+    loadBookings();
+</script>
+</body>
+</html>

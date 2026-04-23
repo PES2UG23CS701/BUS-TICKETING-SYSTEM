@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Bus Booking</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 400px;
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .login-link {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+        }
+        .login-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+        .error-msg {
+            color: red;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        .role-selection {
+            margin-bottom: 20px;
+        }
+        .role-selection label {
+            display: block;
+            margin-bottom: 15px;
+            color: #333;
+            font-weight: 600;
+        }
+        .role-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .role-option {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .role-option:hover {
+            border-color: #667eea;
+            background: #f9f9f9;
+        }
+        .role-option input {
+            margin-right: 10px;
+            width: auto;
+            cursor: pointer;
+        }
+        .role-option-text {
+            display: flex;
+            flex-direction: column;
+        }
+        .role-title {
+            font-weight: 600;
+            color: #333;
+        }
+        .role-desc {
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Register</h2>
+    <div class="form-group">
+        <label for="name">Full Name</label>
+        <input id="name" type="text" placeholder="Enter your full name">
+        <div class="error-msg" id="nameError"></div>
+    </div>
+    <div class="form-group">
+        <label for="email">Email</label>
+        <input id="email" type="email" placeholder="Enter your email">
+        <div class="error-msg" id="emailError"></div>
+    </div>
+    <div class="form-group">
+        <label for="password">Password</label>
+        <input id="password" type="password" placeholder="Enter password (min 6 chars)">
+        <div class="error-msg" id="passwordError"></div>
+    </div>
+    
+    <div class="role-selection">
+        <label>Select Your Role:</label>
+        <div class="role-options">
+            <label class="role-option">
+                <input type="radio" name="role" value="USER" checked>
+                <div class="role-option-text">
+                    <span class="role-title">👤 User - Passenger</span>
+                    <span class="role-desc">Book and manage bus tickets</span>
+                </div>
+            </label>
+            <label class="role-option">
+                <input type="radio" name="role" value="BUS_OPERATOR">
+                <div class="role-option-text">
+                    <span class="role-title">🚌 Bus Operator</span>
+                    <span class="role-desc">Manage your buses and routes</span>
+                </div>
+            </label>
+            <label class="role-option">
+                <input type="radio" name="role" value="ADMIN">
+                <div class="role-option-text">
+                    <span class="role-title">🔧 Admin - System Manager</span>
+                    <span class="role-desc">Manage all buses and view analytics</span>
+                </div>
+            </label>
+        </div>
+    </div>
+    
+    <button onclick="register()">Create Account</button>
+    <div class="login-link">
+        Already have an account? <a href="/login">Login here</a>
+    </div>
+</div>
+
+<script>
+    function register() {
+        let name = document.getElementById("name").value.trim();
+        let email = document.getElementById("email").value.trim();
+        let password = document.getElementById("password").value.trim();
+        let role = document.querySelector('input[name="role"]:checked').value;
+
+        // Clear previous errors
+        document.getElementById("nameError").innerText = "";
+        document.getElementById("emailError").innerText = "";
+        document.getElementById("passwordError").innerText = "";
+
+        // Validation
+        if (!name) {
+            document.getElementById("nameError").innerText = "Name is required";
+            return;
+        }
+        if (!email || !email.includes("@")) {
+            document.getElementById("emailError").innerText = "Valid email is required";
+            return;
+        }
+        if (!password || password.length < 6) {
+            document.getElementById("passwordError").innerText = "Password must be at least 6 characters";
+            return;
+        }
+
+        fetch("http://localhost:8081/user/register", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                name: name,
+                email: email,
+                password: password,
+                role: role
+            })
+        })
+            .then(res => res.json())
+            .then(data => {
+                alert("Registration Successful! Please login.");
+                window.location.href = "/login";
+            })
+            .catch(err => {
+                alert("Registration failed. Please try again.");
+            });
+    }
+</script>
+</body>
+</html>

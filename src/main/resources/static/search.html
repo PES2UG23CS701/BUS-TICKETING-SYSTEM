@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Bus - Bus Booking</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f5f5f5;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            font-size: 24px;
+        }
+        .user-menu {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        .user-menu button {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .user-menu button:hover {
+            background: #f0f0f0;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        .search-section {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        .search-section h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .search-form {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .form-group {
+            flex: 1;
+            min-width: 150px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .search-btn {
+            padding: 10px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            align-self: flex-end;
+        }
+        .search-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        .results-section {
+            display: grid;
+            gap: 20px;
+        }
+        .bus-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 20px;
+            align-items: center;
+        }
+        .bus-info h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+        .bus-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 10px;
+        }
+        .detail {
+            color: #666;
+            font-size: 14px;
+        }
+        .detail-label {
+            font-weight: bold;
+            color: #333;
+        }
+        .bus-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .book-btn {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+        .book-btn:hover {
+            transform: translateY(-2px);
+        }
+        .no-buses {
+            text-align: center;
+            color: #999;
+            padding: 40px;
+            font-size: 18px;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.3);
+        }
+        .modal-heading {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .modal-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .modal-form input {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        .modal-buttons button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .confirm-btn {
+            background: #667eea;
+            color: white;
+        }
+        .cancel-btn {
+            background: #ddd;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <h1>🚌 Bus Booking System</h1>
+    <div class="user-menu">
+        <span id="userName" style="margin-right: 10px;"></span>
+        <button onclick="viewBookings()">My Bookings</button>
+        <button onclick="logout()">Logout</button>
+    </div>
+</div>
+
+<div class="container">
+    <div class="search-section">
+        <h2>Search Buses</h2>
+        <div class="search-form">
+            <div class="form-group">
+                <label for="source">From</label>
+                <input id="source" type="text" placeholder="Enter source city">
+            </div>
+            <div class="form-group">
+                <label for="destination">To</label>
+                <input id="destination" type="text" placeholder="Enter destination city">
+            </div>
+            <button class="search-btn" onclick="search()">Search Buses</button>
+        </div>
+    </div>
+
+    <div class="results-section" id="result"></div>
+</div>
+
+<!-- Modal for seat selection -->
+<div id="seatModal" class="modal">
+    <div class="modal-content">
+        <h2 class="modal-heading">Select Seat</h2>
+        <div class="modal-form">
+            <input type="number" id="seatNumber" placeholder="Enter seat number" min="1" max="50">
+            <input type="date" id="travelDate" placeholder="Select travel date">
+            <div class="modal-buttons">
+                <button class="cancel-btn" onclick="closeSeatModal()">Cancel</button>
+                <button class="confirm-btn" onclick="confirmBooking()">Proceed</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let selectedBusId = null;
+    let selectedBus = null;
+
+    window.onload = function() {
+        checkLogin();
+        loadUserName();
+    };
+
+    function checkLogin() {
+        let userId = localStorage.getItem("userId");
+        if (!userId) {
+            window.location.href = "/login";
+        }
+    }
+
+    function loadUserName() {
+        let userName = localStorage.getItem("userName");
+        if (userName) {
+            document.getElementById("userName").innerText = "Welcome, " + userName;
+        }
+    }
+
+    function search() {
+        let source = document.getElementById("source").value.toLowerCase().trim();
+        let dest = document.getElementById("destination").value.toLowerCase().trim();
+
+        if (!source || !dest) {
+            alert("Please enter both source and destination");
+            return;
+        }
+
+        fetch("http://localhost:8081/bus/all")
+            .then(res => res.json())
+            .then(data => {
+                let output = "";
+
+                data.forEach(bus => {
+                    if (bus.source.toLowerCase() === source && bus.destination.toLowerCase() === dest) {
+                        output += `
+                        <div class="bus-card">
+                            <div class="bus-info">
+                                <h3>${bus.busName}</h3>
+                                <div class="bus-details">
+                                    <div class="detail">
+                                        <span class="detail-label">Route:</span> ${bus.source} → ${bus.destination}
+                                    </div>
+                                    <div class="detail">
+                                        <span class="detail-label">Departure:</span> ${bus.departureTime}
+                                    </div>
+                                    <div class="detail">
+                                        <span class="detail-label">Price:</span> ₹${bus.price}
+                                    </div>
+                                    <div class="detail">
+                                        <span class="detail-label">Seats Available:</span> ${bus.availableSeats}/${bus.totalSeats}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bus-actions">
+                                <button class="book-btn" onclick="openSeatModal(${bus.id}, '${bus.busName}', ${bus.price})">
+                                    Book Now
+                                </button>
+                            </div>
+                        </div>
+                        `;
+                    }
+                });
+
+                if (output === "") {
+                    output = "<div class='no-buses'>No buses found for this route</div>";
+                }
+
+                document.getElementById("result").innerHTML = output;
+            })
+            .catch(err => {
+                alert("Error searching buses: " + err.message);
+            });
+    }
+
+    function openSeatModal(busId, busName, price) {
+        selectedBusId = busId;
+        selectedBus = { id: busId, name: busName, price: price };
+        document.getElementById("seatModal").style.display = "block";
+    }
+
+    function closeSeatModal() {
+        document.getElementById("seatModal").style.display = "none";
+        document.getElementById("seatNumber").value = "";
+        document.getElementById("travelDate").value = "";
+    }
+
+    function confirmBooking() {
+        let seatNumber = document.getElementById("seatNumber").value;
+        let travelDate = document.getElementById("travelDate").value;
+        let userId = localStorage.getItem("userId");
+
+        if (!seatNumber || !travelDate) {
+            alert("Please enter seat number and travel date");
+            return;
+        }
+
+        if (seatNumber < 1 || seatNumber > 50) {
+            alert("Invalid seat number");
+            return;
+        }
+
+        let bookingData = {
+            userId: parseInt(userId),
+            busId: selectedBusId,
+            seatNumber: parseInt(seatNumber),
+            travelDate: new Date(travelDate).toISOString()
+        };
+
+        fetch("http://localhost:8081/booking/book", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(bookingData)
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.id) {
+                    // Save booking data and proceed to payment
+                    localStorage.setItem("bookingId", data.id);
+                    localStorage.setItem("bookingPrice", selectedBus.price);
+                    closeSeatModal();
+                    window.location.href = "/payment";
+                } else {
+                    alert("Booking failed: " + (data.message || "Unknown error"));
+                }
+            })
+            .catch(err => {
+                alert("Booking error: " + err.message);
+            });
+    }
+
+    function viewBookings() {
+        let userId = localStorage.getItem("userId");
+        fetch(`http://localhost:8081/booking/user/${userId}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.length === 0) {
+                    alert("You have no bookings yet");
+                } else {
+                    let bookingsInfo = "Your Bookings:\n\n";
+                    data.forEach(booking => {
+                        bookingsInfo += `Booking ID: ${booking.id}, Bus ID: ${booking.busId}, Seat: ${booking.seatNumber}, Status: ${booking.status}\n`;
+                    });
+                    alert(bookingsInfo);
+                }
+            })
+            .catch(err => alert("Error fetching bookings: " + err.message));
+    }
+
+    function logout() {
+        if (confirm("Are you sure you want to logout?")) {
+            localStorage.clear();
+            window.location.href = "/login";
+        }
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        let modal = document.getElementById("seatModal");
+        if (event.target == modal) {
+            closeSeatModal();
+        }
+    };
+</script>
+</body>
+</html>
